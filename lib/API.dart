@@ -219,6 +219,7 @@ Widget build(BuildContext context) {
     drawer: MyDrawer(
       username: 'Angga Pratama',
       backgroundImage: 'assets/images/icon_flutter.png',
+      color: Colors.white,
     ),
     body: Center(
       child: FutureBuilder<List<News>>(

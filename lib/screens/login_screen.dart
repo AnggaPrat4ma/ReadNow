@@ -1,50 +1,68 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(LoginApp());
-}
-
-class LoginApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: LoginPage(),
-    );
-  }
-}
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:my_app/cubit/auth/cubit/auth_cubit.dart';
+import 'package:my_app/dto/login.dart';
+import 'package:my_app/screens/home_screen.dart';
+import 'package:my_app/services/data_service.dart';
+import 'package:my_app/utils/constants.dart';
+import 'package:my_app/utils/secure_storage_util.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController _usernameController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  String _errorMessage = '';
 
-  void _login() {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+  bool _isHovering = false;
 
-    // Example authentication logic, replace it with your own
-    if (username == '1' && password == '2') {
-      // Navigate to home screen on successful login
-      Navigator.pushReplacementNamed(context, '/home-screen');
-    } else {
-      setState(() {
-        _errorMessage = 'Invalid username or password';
-      });
+  void sendLogin(context, AuthCubit authCubit) async {
+    final email = _emailController.text;
+    final password = _passwordController.text;
+
+    final response = await DataService.sendLoginData(email, password);
+    if(response.statusCode == 200) {
+      debugPrint("sending success");
+      final data = jsonDecode(response.body);
+      final loggedIn = Login.fromJson(data);
+      await SecureStorageUtil.storage.write(key: tokenStoreName, value: loggedIn.accessToken);
+
+      authCubit.login(loggedIn.accessToken);
+      Navigator.pushReplacementNamed(context, '/home-page');
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(), // Ganti dengan layar tujuan setelah login
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.ease;
+
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(
+            position: offsetAnimation,
+            child: child,
+          );
+        },
+      );
+      debugPrint(loggedIn.accessToken);
+    }
+    else{
+      debugPrint('failed');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authCubit = BlocProvider.of<AuthCubit>(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -67,15 +85,15 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/baca.png', // Gambar logo
+                    'assets/images/A.png', // Gambar logo
                     height: 170,
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'ReadNow',
-                    style: TextStyle(
+                    'DewatAnv',
+                    style: GoogleFonts.pacifico(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -84,12 +102,12 @@ class _LoginPageState extends State<LoginPage> {
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Color.fromRGBO(143, 148, 251, .2),
-                          blurRadius: 20.0,
-                          offset: Offset(0, 10),
+                          color: Color.fromRGBO(143, 148, 251, .5),
+                          blurRadius: 30.0,
+                          offset: Offset(0, 20),
                         ),
                       ],
                     ),
@@ -101,10 +119,11 @@ class _LoginPageState extends State<LoginPage> {
                             border: Border(bottom: BorderSide(color: Colors.grey)),
                           ),
                           child: TextField(
-                            controller: _usernameController,
+                            controller: _emailController,
                             decoration: InputDecoration(
+                              icon: Icon(Icons.person, color: Colors.grey),
                               border: InputBorder.none,
-                              hintText: "username",
+                              hintText: "Username",
                               hintStyle: TextStyle(color: Colors.grey[400]),
                             ),
                           ),
@@ -114,6 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: TextField(
                             controller: _passwordController,
                             decoration: InputDecoration(
+                              icon: Icon(Icons.lock, color: Colors.grey),
                               border: InputBorder.none,
                               hintText: "Password",
                               hintStyle: TextStyle(color: Colors.grey[400]),
@@ -124,41 +144,48 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 30),
-                  InkWell(
-                    onTap: _login,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF61A4F1), Color(0xFF478DE0)]),
-                        borderRadius: BorderRadius.circular(10),
+                  const SizedBox(height: 30),
+                  MouseRegion(
+                    onEnter: (_) => setState(() => _isHovering = true),
+                    onExit: (_) => setState(() => _isHovering = false),
+                  child: InkWell(
+                    onTap: () { sendLogin(context, authCubit); },
+                    child: AnimatedContainer(
+                        duration: const Duration(seconds: 2),
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: _isHovering
+                                ? [Color.fromARGB(255, 0, 0, 0), Color.fromARGB(255, 0, 0, 0)] // Warna berubah saat hover
+                                : [const Color(0xFF61A4F1), const Color(0xFF478DE0)],
+                          ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color.fromRGBO(143, 148, 251, .4),
+                            blurRadius: 20.0,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         'Login',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ),
+                  ),
                   ),
                   SizedBox(height: 10),
                   TextButton(
                     onPressed: () {
-                      // Implement forgot password functionality here
-                      print('Forgot password button pressed');
+                      // Implementasi untuk lupa password
                     },
                     child: Text(
                       'Forgot Password?',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ),
-                  if (_errorMessage.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                        _errorMessage,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -168,3 +195,5 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+

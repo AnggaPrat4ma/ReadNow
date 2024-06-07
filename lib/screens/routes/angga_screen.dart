@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/components/asset_image_widget.dart';
 class AnggaScreen extends StatefulWidget {
   const AnggaScreen({ Key? key }) : super(key: key);
 

@@ -168,7 +168,7 @@ class _CrudSQLScreenState extends State<CrudSQLScreen> {
         backgroundColor: Colors.blue,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      drawer: MyDrawer(username: 'Angga Pratama', backgroundImage: 'assets/images/icon_flutter.png'),
+      drawer: MyDrawer(username: 'Angga Pratama', backgroundImage: 'assets/images/icon_flutter.png', color: Colors.white,),
       body: _isLoading
           ? Center(
               child: CircularProgressIndicator(),

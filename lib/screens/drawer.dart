@@ -1,19 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/API.dart';
 import 'package:my_app/CRUD.dart';
-import 'package:my_app/screens/login_screen.dart';
+import 'package:my_app/screens/data_screen.dart';
+import 'package:my_app/screens/routes/customer_service.dart';
+import 'package:my_app/services/data_service.dart';
+import 'package:my_app/utils/constants.dart';
+import 'package:my_app/utils/secure_storage_util.dart';
 
 class MyDrawer extends StatelessWidget {
   final String username;
   final String backgroundImage;
 
-  MyDrawer({required this.username, required this.backgroundImage});
+  MyDrawer({required this.username, required this.backgroundImage, required Color color});
+
+  Future<void> doLogout(context) async {
+  debugPrint("need logout");
+  final response = await DataService.logoutData();
+  if (response.statusCode == 200) {
+    await SecureStorageUtil.storage.delete(key: tokenStoreName);
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
-        color: Color.fromARGB(255, 244, 244, 244),
+        //
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
@@ -82,6 +95,18 @@ class MyDrawer extends StatelessWidget {
                         builder: (context) => const LongListScreen()),
                   ),
             ),
+            ListTile(
+              leading: Icon(Icons.group_sharp, color: Colors.black),
+              title: Text(
+                'CUSTOMER SUPPORT',
+                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CustomerServiceScreen()),
+                  ),
+            ),
             Divider(color: Colors.black,),
             ListTile(
               leading: Icon(Icons.book, color: Colors.black),
@@ -94,8 +119,8 @@ class MyDrawer extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.book, color: Colors.black),
-              title: Text(
+              leading: const Icon(Icons.book, color: Colors.black),
+              title: const Text(
                 'BUKU NOVEL',
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
@@ -104,8 +129,8 @@ class MyDrawer extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.book, color: Colors.black),
-              title: Text(
+              leading: const Icon(Icons.book, color: Colors.black),
+              title: const Text(
                 'BUKU CERITA',
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
@@ -120,7 +145,7 @@ class MyDrawer extends StatelessWidget {
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/my-list-screen');
+                Navigator.pushNamed(context, '/counter-screen');
               },
             ),
             ListTile(
@@ -129,9 +154,11 @@ class MyDrawer extends StatelessWidget {
                 'KOMIK',
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/my-list-screen');
-              },
+              onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const DatasScreen()),
+                  ),
             ),
             ListTile(
               leading: Icon(Icons.book, color: Colors.black),
@@ -140,7 +167,7 @@ class MyDrawer extends StatelessWidget {
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/my-list-screen');
+                Navigator.pushNamed(context, '/welcome-screen');
               },
             ),
             ListTile(
@@ -150,18 +177,38 @@ class MyDrawer extends StatelessWidget {
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/my-list-screen');
+                Navigator.pushNamed(context, '/my-list-screen');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.book, color: Colors.black),
+              title: Text(
+                'Balance Screen',
+                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              onTap: () {
+                Navigator.pushNamed(context, '/balance-screen');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.book, color: Colors.black),
+              title: Text(
+                'Spending Screen',
+                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              onTap: () {
+                Navigator.pushNamed(context, '/spending-screen');
               },
             ),
             Divider(color: Colors.black),
             ListTile(
-              leading: Icon(Icons.settings, color: Colors.black),
+              leading: Icon(Icons.person, color: Colors.black),
               title: Text(
-                'Account',
+                'About Us',
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
               onTap: () {
-                Navigator.pushReplacementNamed(context, '/account-screen');
+                Navigator.pushNamed(context, '/about_us');
               },
             ),
             ListTile(
@@ -180,11 +227,9 @@ class MyDrawer extends StatelessWidget {
                 'Sign Out',
                 style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
-              onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                    builder: (context) => LoginPage()),
-                  ),
+              onTap: () {
+                doLogout(context);
+              },
             ),
           ],
         ),

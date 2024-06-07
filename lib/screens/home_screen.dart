@@ -1,268 +1,272 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screens/drawer.dart';
-
-class Book {
-  final String title;
-  final String imageUrl;
-  final String route;
-  final String description;
-
-  const Book({
-    required this.title,
-    required this.imageUrl,
-    required this.route,
-    required this.description,
-  });
-}
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({ Key? key }) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-  final List<Book> books = [
-    Book(
-      title: 'Sangkuriang',
-      imageUrl: 'assets/images/sangkuriang.jpg',
-      route: '/bookDetail?id=1',
-      description: 'Description for Book 1.',
-    ),
-    Book(
-      title: 'Si Kancil',
-      imageUrl: 'assets/images/kancil.jpg',
-      route: '/bookDetail?id=2',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'Happy Coding',
-      imageUrl: 'assets/images/coding.jpeg',
-      route: '/bookDetail?id=3',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'IPA',
-      imageUrl: 'assets/images/ipa.png',
-      route: '/bookDetail?id=4',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'Perahu Kertas',
-      imageUrl: 'assets/images/perahu.jpg',
-      route: '/bookDetail?id=5',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'Si Juki',
-      imageUrl: 'assets/images/juki.jpg',
-      route: '/bookDetail?id=6',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'Morfologi',
-      imageUrl: 'assets/images/mor.jpg',
-      route: '/bookDetail?id=6',
-      description: 'Description for Book 2.',
-    ),
-    Book(
-      title: 'Kamus',
-      imageUrl: 'assets/images/kamus.jpg',
-      route: '/bookDetail?id=6',
-      description: 'Description for Book 2.',
-    ),
-    // Add more books
+  final List<Map<String, dynamic>> featuredContents = [
+    {
+      'image': 'assets/images/agung.jpg',
+      'title': 'Pura Agung Besakih',
+      'rating': 5,
+    },
+    {
+      'image': 'assets/images/tanah.jpeg',
+      'title': 'Tanah Lot',
+      'rating': 4,
+    },
+    {
+      'image': 'assets/images/ulun-danu.jpg',
+      'title': 'Pura Ulun Danu',
+      'rating': 4,
+    },
   ];
+
+  final List<Map<String, dynamic>> videos = [
+    {
+      'thumbnail': 'assets/images/nusa dua.png',
+      'title': 'Nusa Dua',
+      'description': 'A beautiful view of nature.',
+      'rating': 4,
+    },
+    {
+      'thumbnail': 'assets/images/uluwatu.jpg',
+      'title': 'Uluwatu',
+      'description': 'The city illuminated at night.',
+      'rating': 5,
+    },
+    {
+      'thumbnail': 'assets/images/sanur.png',
+      'title': 'Pantai Sanur',
+      'description': 'Snowy mountains under a clear.',
+      'rating': 3,
+    },
+    {
+      'thumbnail': 'assets/images/museum.jpg',
+      'title': 'Museum Bali',
+      'description': 'Sunset over the ocean.',
+      'rating': 4,
+    },
+    {
+      'thumbnail': 'assets/images/tirta.png',
+      'title': 'Tirta Empul',
+      'description': 'A serene path through the forest.',
+      'rating': 5,
+    },
+    {
+      'thumbnail': 'assets/images/penglipuran.jpg',
+      'title': 'Desa Penglipuran',
+      'description': 'A vast desert landscape.',
+      'rating': 2,
+    },
+  ];
+
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _filteredVideos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredVideos = videos;
+    _searchController.addListener(_filterVideos);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterVideos);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterVideos() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredVideos = videos.where((video) {
+        final titleLower = video['title']!.toLowerCase();
+        final descriptionLower = video['description']!.toLowerCase();
+        return titleLower.contains(query) || descriptionLower.contains(query);
+      }).toList();
+    });
+  }
+
+  Widget _buildStarRating(int rating) {
+    return Row(
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_border,
+          size: 16.0,
+          color: Colors.amber,
+        );
+      }),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'ReadNow',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.blue,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      drawer: MyDrawer(
-        username: 'Angga Pratama',
-        backgroundImage: 'assets/images/angga.jpg',
-        ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: books.length,
-          itemBuilder: (context, index) {
-            final book = books[index];
-            return GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => BookDetailScreen(book: book),
-                ));
-              },
-              child: Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(15),
-                        ),
-                        child: Image.asset(
-                          book.imageUrl,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        book.title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10.0,
+                      offset: Offset(0, 5),
                     ),
                   ],
                 ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 15.0),
+                  ),
+                ),
               ),
-            );
-          },
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Color.fromARGB(255, 2, 146, 218),
-        elevation: 10,
-        shape: const CircularNotchedRectangle(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              NavBarItem(
-                icon: Icons.home,
-                text: 'Home',
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/home-screen');// Add your onTap functionality here
-                },
-              ),
-              NavBarItem(
-                icon: Icons.person,
-                text: 'Profile',
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/profil-screen');// Add your onTap functionality here
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/search');
-        },
-        tooltip: 'Search',
-        child: Icon(Icons.search),
-      ),
-    );
-  }
-}
-
-class NavBarItem extends StatefulWidget {
-  final IconData icon;
-  final String text;
-  final Function onTap;
-
-  const NavBarItem({
-    Key? key,
-    required this.icon,
-    required this.text,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  _NavBarItemState createState() => _NavBarItemState();
-}
-
-class _NavBarItemState extends State<NavBarItem> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        widget.onTap();
-      },
-      onHover: (value) {
-        setState(() {
-          _isHovered = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.blue[900] : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              widget.icon,
-              color: Colors.white,
             ),
-            SizedBox(width: 8.0),
-            Text(
-              widget.text,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            // Featured Content Slider
+            Container(
+              height: 200.0,
+              child: PageView.builder(
+                itemCount: featuredContents.length,
+                itemBuilder: (context, index) {
+                  final content = featuredContents[index];
+                  return Stack(
+                    children: [
+                      content['image']!.startsWith('http')
+                          ? Image.network(
+                              content['image']!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            )
+                          : Image.asset(
+                              content['image']!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.transparent, Colors.black54],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 10.0,
+                        left: 10.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              featuredContents[index]['title']!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20.0,
+                                fontWeight: FontWeight.bold,
+                                backgroundColor: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 5.0),
+                            _buildStarRating(featuredContents[index]['rating']),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            // Section Title
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Recommended for You',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Video Grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                  childAspectRatio: 2 / 2,
+                ),
+                itemCount: _filteredVideos.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15.0),
+                          child: _filteredVideos[index]['thumbnail']!
+                                  .startsWith('http')
+                              ? Image.network(
+                                  _filteredVideos[index]['thumbnail']!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  _filteredVideos[index]['thumbnail']!,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      SizedBox(height: 5.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _filteredVideos[index]['title']!,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          _buildStarRating(_filteredVideos[index]['rating']),
+                        ],
+                      ),
+                      Text(_filteredVideos[index]['description']!),
+                    ],
+                  );
+                },
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class BookDetailScreen extends StatelessWidget {
-  final Book book;
-
-  const BookDetailScreen({Key? key, required this.book}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(book.title),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            book.description,
-            textAlign: TextAlign.center,
-          ),
         ),
       ),
     );

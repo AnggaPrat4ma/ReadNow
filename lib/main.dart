@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'package:my_app/CRUD.dart';
+import 'package:my_app/components/auth_wrapper.dart';
+import 'package:my_app/cubit/auth/cubit/auth_cubit.dart';
+import 'package:my_app/cubit/balance/cubit/balance_cubit.dart';
+import 'package:my_app/cubit/counter_cubit.dart';
+import 'package:my_app/screens/category.dart';
+import 'package:my_app/screens/data_screen.dart';
+import 'package:my_app/screens/drawer.dart';
 import 'package:my_app/screens/home_screen.dart';
 import 'package:my_app/screens/login_screen.dart';
+import 'package:my_app/screens/routes/BalanceScreen/balance_screen.dart';
 import 'package:my_app/screens/routes/SecondScreen/second_screen.dart';
+import 'package:my_app/screens/routes/SpendingScreen/spending_screen.dart';
+import 'package:my_app/screens/routes/about_us.dart';
 import 'package:my_app/screens/routes/angga_screen.dart';
+import 'package:my_app/screens/routes/counter_screen.dart';
 import 'package:my_app/screens/routes/custom_screen.dart';
-import 'package:my_app/screens/routes/kategori/cerita.dart';
-import 'package:my_app/screens/routes/kategori/novel.dart';
-import 'package:my_app/screens/routes/kategori/pelajaran.dart';
+import 'package:my_app/screens/routes/customer_service.dart';
+import 'package:my_app/screens/routes/kategori/BULELENG.dart';
+import 'package:my_app/screens/routes/kategori/BADUNG.dart';
+import 'package:my_app/screens/routes/kategori/JEMBRANA.dart';
+import 'package:my_app/screens/routes/welcome_screen.dart';
 import 'package:my_app/screens/search_screen.dart';
 import 'package:my_app/screens/setting_screen.dart';
 import 'package:my_app/screens/profile_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -21,12 +37,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<CounterCubit>(create: (context) => CounterCubit()),
+        BlocProvider<BalanceCubit>(create:(context) => BalanceCubit()),
+        BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
+      ], 
+      child: MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
+      initialRoute: '/login',
+      home: const MyHomePage(title: 'DewatAnv'),
       routes: {
         '/second-screen':(context) => const SecondScreen(),
         '/profil-screen':(context) => const ProfileScreen(),
@@ -34,14 +57,19 @@ class MyApp extends StatelessWidget {
         '/angga-screen':(context) => const AnggaScreen(),
         '/setting-screen':(context) => const SettingScreen(),
         '/home-screen':(context) => const HomeScreen(),
-        '/login':(context) => LoginPage(),
+        '/login':(context) => const LoginPage(),
         '/search':(context) => SearchButtonDemo(),
         '/CRUD':(context) => const CrudSQLScreen(),
-        '/pelajaran':(context) => const Pelajaran(),
-        '/novel':(context) => const Novel(),
-        '/cerita':(context) => const Cerita()
+        '/datascreen':(context) => const DatasScreen(),
+        '/customerservice':(context) => const CustomerServiceScreen(),
+        '/about_us':(context) => const AboutUs(),
+        '/counter-screen':(context) => const CounterScreen(),
+        '/welcome-screen':(context) => const WelcomeScreen(),
+        '/balance-screen':(context) => const AuthWrapper(child: BalanceScreen()),
+        '/spending-screen':(context) => const AuthWrapper(child: SpendingScreen(),),
+        '/home-page':(context) => const MyHomePage(title: 'DewatAnv')
       },
-    );
+    ));
   }
 }
 
@@ -54,124 +82,85 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   int _selectedIndex = 0;
+  PageController _pageController = PageController();
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const Category(),
     const ProfileScreen(),
   ];
 
   final List<String> _appBarTitles = const [
-    'ReadNow',
-    'My Profile',
+    'DewatAnv',
+    'Category',
+    'Profile',
   ]; // List of titles corresponding to each screen
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    _pageController.animateToPage(index,
+    duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_appBarTitles[_selectedIndex]),
-      ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomAppBar(
-        color: Color.fromARGB(255, 2, 146, 218),
-        elevation: 10,
-        shape: const CircularNotchedRectangle(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              NavBarItem(
-                icon: Icons.home,
-                text: 'Home',
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/home-screen');// Add your onTap functionality here
-                },
-              ),
-              NavBarItem(
-                icon: Icons.person,
-                text: 'Profile',
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/profil-screen');// Add your onTap functionality here
-                },
-              ),
-            ],
+        title: Text(
+          _appBarTitles[_selectedIndex],
+          style: GoogleFonts.pacifico(
+            color: Colors.white,
+            fontSize: 30,
           ),
         ),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 30, 129, 209),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/search');
+      drawer: MyDrawer(
+        username: 'Angga Pratama',
+        backgroundImage: 'assets/images/A.png',
+        color: Colors.white,
+      ),
+      body: PageView(
+        controller: _pageController,
+        children: _screens,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
         },
-        tooltip: 'Search',
-        child: Icon(Icons.search),
       ),
-    );
-  }
-}
-
-class NavBarItem extends StatefulWidget {
-  final IconData icon;
-  final String text;
-  final Function onTap;
-
-  const NavBarItem({
-    Key? key,
-    required this.icon,
-    required this.text,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  _NavBarItemState createState() => _NavBarItemState();
-}
-
-class _NavBarItemState extends State<NavBarItem> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        widget.onTap();
-      },
-      onHover: (value) {
-        setState(() {
-          _isHovered = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: _isHovered ? Colors.blue[900] : Colors.transparent,
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              widget.icon,
-              color: Colors.white,
-            ),
-            SizedBox(width: 8.0),
-            Text(
-              widget.text,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(255, 30, 129, 209),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, size: 30),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category, size: 30),
+            label: 'Category',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person, size: 30),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color.fromARGB(255, 168, 168, 168),
+        unselectedItemColor: Colors.white,
+        onTap: _onItemTapped,
       ),
     );
   }
